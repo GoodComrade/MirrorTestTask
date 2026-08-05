@@ -7,6 +7,8 @@ namespace Networking.Mirror
 {
     public sealed class MirrorServerMessenger : IServerMessenger
     {
+        private bool _handlerRegistered;
+
         public bool IsActive => NetworkServer.active;
 
         public IReadOnlyCollection<NetworkConnectionToClient> Connections =>
@@ -23,7 +25,12 @@ namespace Networking.Mirror
         public void RegisterSubscriptionHandler(
             Action<NetworkConnectionToClient, SubscriptionMessage> handler)
         {
+            if (_handlerRegistered)
+                return;
+
             NetworkServer.RegisterHandler(handler);
+
+            _handlerRegistered = true;
         }
     }
 }

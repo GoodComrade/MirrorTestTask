@@ -1,9 +1,11 @@
 using Networking.Mirror;
+using Networking.Registration;
 using Networking.Registry;
 using Networking.Serialization;
 using Networking.Services;
 using Networking.Subscription;
 using Zenject;
+using UnityEngine;
 
 namespace Networking.Installers
 {
@@ -13,6 +15,10 @@ namespace Networking.Installers
         {
             Container.Bind<NetworkMessageRegistry>()
                 .AsSingle();
+
+            Container.Bind<NetworkMessageRegistration>()
+                .AsSingle()
+                .NonLazy();
 
             Container.Bind<INetworkSerializer>()
                 .To<JsonNetworkSerializer>()
@@ -29,8 +35,11 @@ namespace Networking.Installers
                 .To<MirrorClientMessenger>()
                 .AsSingle();
 
-            Container.BindInterfacesAndSelfTo<NetworkMessageService>()
+            Container.Bind<INetworkMessageService>()
+                .To<NetworkMessageService>()
                 .AsSingle();
+
+            Debug.Log("NetworkInstaller loaded");
         }
     }
 }

@@ -7,10 +7,9 @@ namespace Networking.Mirror
 {
     public sealed class MirrorClientMessenger : IClientMessenger
     {
-        public bool IsActive => NetworkServer.active;
+        private bool _handlerRegistered;
 
-        public IReadOnlyCollection<NetworkConnectionToClient> Connections =>
-            NetworkServer.connections.Values;
+        public bool IsActive => NetworkClient.active;
 
         public void Send<T>(T message)
             where T : struct, NetworkMessage
@@ -20,7 +19,12 @@ namespace Networking.Mirror
 
         public void RegisterEnvelopeHandler(Action<NetworkEnvelope> handler)
         {
-            NetworkClient.RegisterHandler<NetworkEnvelope>(handler);
+            if (_handlerRegistered)
+                return;
+
+            NetworkClient.RegisterHandler(handler);
+
+            _handlerRegistered = true;
         }
     }
 }

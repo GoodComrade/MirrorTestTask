@@ -1,21 +1,29 @@
 using Mirror;
 using Networking;
+using Networking.Services;
+using Zenject;
 
 public class CustomNetworkManager : NetworkManager
 {
-    public NetworkBootstrap Bootstrap;
+    private INetworkMessageService _networkService;
+
+    [Inject]
+    private void Construct(INetworkMessageService networkService)
+    {
+        _networkService = networkService;
+    }
 
     public override void OnStartServer()
     {
         base.OnStartServer();
 
-        Bootstrap.OnServerStarted();
+        _networkService.RegisterServerHandlers();
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
 
-        Bootstrap.OnClientStarted();
+        _networkService.RegisterClientHandlers();
     }
 }

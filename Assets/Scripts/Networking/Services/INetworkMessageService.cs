@@ -5,6 +5,8 @@ namespace Networking.Services
 {
     public interface INetworkMessageService
     {
+        event Action<NetworkConnectionToClient, ushort> ClientSubscribed;
+
         void RegisterServerHandlers();
 
         void RegisterClientHandlers();

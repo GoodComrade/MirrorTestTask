@@ -10,8 +10,10 @@ using UnityEngine;
 
 namespace Networking.Services
 {
-    public sealed partial class NetworkMessageService : INetworkMessageService
+    public sealed class NetworkMessageService : INetworkMessageService
     {
+        public event Action<NetworkConnectionToClient, ushort> ClientSubscribed;
+
         private readonly NetworkMessageRegistry _registry;
         private readonly INetworkSerializer _serializer;
         private readonly NetworkSubscriptionStorage _subscriptions;
@@ -19,11 +21,6 @@ namespace Networking.Services
         private readonly IServerMessenger _serverMessenger;
         private readonly IClientMessenger _clientMessenger;
 
-        /// <summary>
-        /// Registered client hadlers.
-        /// Key — Message TypeId.
-        /// Value — function taking serialized payload.
-        /// </summary>
         private readonly Dictionary<Type, Action<byte[]>> _handlers = new();
 
         public NetworkMessageService(
@@ -36,7 +33,6 @@ namespace Networking.Services
             _registry = registry;
             _serializer = serializer;
             _subscriptions = subscriptions;
-
             _serverMessenger = serverMessenger;
             _clientMessenger = clientMessenger;
         }
@@ -56,15 +52,11 @@ namespace Networking.Services
             Type messageType = typeof(T);
 
             if (_handlers.ContainsKey(messageType))
-            {
-                throw new InvalidOperationException(
-                    $"Handler for '{messageType.Name}' is already registered.");
-            }
+                throw new InvalidOperationException($"Handler for '{messageType.Name}' is already registered.");
 
             _handlers.Add(messageType, payload =>
             {
                 T message = (T)_serializer.Deserialize(payload, typeof(T));
-
                 handler.Invoke(message);
             });
         }
@@ -72,10 +64,7 @@ namespace Networking.Services
         public void Subscribe<T>()
         {
             if (!_clientMessenger.IsActive)
-            {
-                throw new InvalidOperationException(
-                    "Subscriptions can only be sent from a client.");
-            }
+                throw new InvalidOperationException("Subscriptions can only be sent from a client.");
 
             ushort typeId = _registry.GetId<T>();
 
@@ -88,50 +77,35 @@ namespace Networking.Services
         public void Send<T>(NetworkConnectionToClient connection, T message)
         {
             if (!_serverMessenger.IsActive)
-            {
-                throw new InvalidOperationException(
-                    "Messages can only be sent from the server.");
-            }
+                throw new InvalidOperationException("Messages can only be sent from the server.");
 
             if (connection == null)
-            {
                 throw new ArgumentNullException(nameof(connection));
-            }
 
             ushort typeId = _registry.GetId<T>();
 
             if (!_subscriptions.HasSubscription(connection, typeId))
-            {
-                Debug.Log(
-                    $"Connection {connection.connectionId} is not subscribed to message {typeof(T).Name}.");
-
                 return;
-            }
 
             byte[] payload = _serializer.Serialize(message);
 
-            var envelope = new NetworkEnvelope
+            _serverMessenger.Send(connection, new NetworkEnvelope
             {
                 TypeId = typeId,
                 Payload = payload
-            };
-
-            _serverMessenger.Send(connection, envelope);
+            });
         }
 
         public void Broadcast<T>(T message)
         {
             if (!_serverMessenger.IsActive)
-            {
-                throw new InvalidOperationException(
-                    "Broadcast can only be called on the server.");
-            }
+                throw new InvalidOperationException("Broadcast can only be called on the server.");
 
             ushort typeId = _registry.GetId<T>();
 
             byte[] payload = _serializer.Serialize(message);
 
-            var envelope = new NetworkEnvelope
+            NetworkEnvelope envelope = new()
             {
                 TypeId = typeId,
                 Payload = payload
@@ -140,9 +114,7 @@ namespace Networking.Services
             foreach (NetworkConnectionToClient connection in _serverMessenger.Connections)
             {
                 if (!_subscriptions.HasSubscription(connection, typeId))
-                {
                     continue;
-                }
 
                 _serverMessenger.Send(connection, envelope);
             }
@@ -152,21 +124,25 @@ namespace Networking.Services
             NetworkConnectionToClient connection,
             SubscriptionMessage message)
         {
+            if (_subscriptions.HasSubscription(connection, message.TypeId))
+                return;
+
             _subscriptions.AddSubscription(connection, message.TypeId);
 
-            Debug.Log(
-                $"Connection {connection.connectionId} subscribed to message {message.TypeId}");
+            ClientSubscribed?.Invoke(connection, message.TypeId);
         }
 
         private void OnEnvelopeReceived(NetworkEnvelope envelope)
         {
-            Type messageType = _registry.GetType(envelope.TypeId);
+            if (!_registry.TryGetType(envelope.TypeId, out Type messageType))
+            {
+                Debug.LogWarning($"Unknown message id '{envelope.TypeId}'.");
+                return;
+            }
 
             if (!_handlers.TryGetValue(messageType, out Action<byte[]> handler))
             {
-                Debug.LogWarning(
-                    $"No handler registered for message '{messageType.Name}'.");
-
+                Debug.LogWarning($"No handler registered for '{messageType.Name}'.");
                 return;
             }
 
