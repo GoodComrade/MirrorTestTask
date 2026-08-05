@@ -39,7 +39,7 @@ namespace Networking.Installers
                 .To<NetworkMessageService>()
                 .AsSingle();
 
-            Debug.Log("NetworkInstaller loaded");
+            //Debug.Log("NetworkInstaller loaded");
         }
     }
 }

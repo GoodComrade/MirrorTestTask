@@ -14,11 +14,6 @@ namespace Networking
             _networkService = networkService;
         }
 
-        private void Awake()
-        {
-            Debug.Log("NetworkBootstrap initialized");
-        }
-
         public void OnServerStarted()
         {
             _networkService.RegisterServerHandlers();

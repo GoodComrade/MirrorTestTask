@@ -15,20 +15,20 @@ namespace Networking.Samples
         [Inject]
         private void Construct(INetworkMessageService networkService)
         {
-            Debug.Log("HelloMessageSample: Injected");
+            //Debug.Log("HelloMessageSample: Injected");
             _networkService = networkService;
         }
 
 
         private void Start()
         {
-            Debug.Log("HelloMessageSample: Start");
+            //Debug.Log("HelloMessageSample: Start");
 
             _networkService.RegisterHandler<HelloMessage>(
                 OnHelloMessage);
 
 
-            Debug.Log("HelloMessageSample: Subscribe to ClientSubscribed event");
+            //Debug.Log("HelloMessageSample: Subscribe to ClientSubscribed event");
 
             _networkService.ClientSubscribed += OnClientSubscribed;
 
@@ -53,14 +53,14 @@ namespace Networking.Samples
                 yield return null;
             }
 
-            Debug.Log("HelloMessageSample: Client connected");
+            //Debug.Log("HelloMessageSample: Client connected");
 
             Subscribe();
         }
 
         private void Subscribe()
         {
-            Debug.Log("HelloMessageSample: Subscribe called");
+            //Debug.Log("HelloMessageSample: Subscribe called");
 
             _networkService.Subscribe<HelloMessage>();
         }
@@ -75,8 +75,7 @@ namespace Networking.Samples
             NetworkConnectionToClient connection,
             ushort typeId)
         {
-            Debug.Log(
-        $"HelloMessageSample: ClientSubscribed. Connection={connection.connectionId}, Type={typeId}");
+            //Debug.Log($"HelloMessageSample: ClientSubscribed. Connection={connection.connectionId}, Type={typeId}");
 
             _networkService.Send(
                 connection,

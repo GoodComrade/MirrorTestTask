@@ -39,13 +39,13 @@ namespace Networking.Services
 
         public void RegisterServerHandlers()
         {
-            Debug.Log("SERVER: RegisterServerHandlers");
+            //Debug.Log("SERVER: RegisterServerHandlers");
             _serverMessenger.RegisterSubscriptionHandler(OnSubscriptionReceived);
         }
 
         public void RegisterClientHandlers()
         {
-            Debug.Log("CLIENT: Register handlers");
+            //Debug.Log("CLIENT: Register handlers");
             _clientMessenger.RegisterEnvelopeHandler(OnEnvelopeReceived);
         }
 
@@ -70,8 +70,7 @@ namespace Networking.Services
 
             ushort typeId = _registry.GetId<T>();
 
-            Debug.Log(
-        $"CLIENT: Sending subscription {typeof(T).Name}, id={typeId}");
+            //Debug.Log($"CLIENT: Sending subscription {typeof(T).Name}, id={typeId}");
         
             _clientMessenger.Send(new SubscriptionMessage
                 {
@@ -90,12 +89,11 @@ namespace Networking.Services
 
             ushort typeId = _registry.GetId<T>();
 
-            Debug.Log(
-    $"Checking subscription. Connection={connection.connectionId}, Type={typeId}");
+            //Debug.Log($"Checking subscription. Connection={connection.connectionId}, Type={typeId}");
+
             if (!_subscriptions.HasSubscription(connection, typeId))
             {
-                Debug.Log(
-        $"Connection {connection.connectionId} is not subscribed.");
+                Debug.Log($"Connection {connection.connectionId} is not subscribed.");
                 return;
             }
 
@@ -107,8 +105,7 @@ namespace Networking.Services
                 Payload = payload
             });
 
-            Debug.Log(
-        $"NetworkMessageService.Send called. Message={typeof(T).Name}");
+            //Debug.Log($"NetworkMessageService.Send called. Message={typeof(T).Name}");
         }
 
         public void Broadcast<T>(T message)
@@ -139,8 +136,7 @@ namespace Networking.Services
             NetworkConnectionToClient connection,
             SubscriptionMessage message)
         {
-            Debug.Log(
-        $"NetworkMessageService: Subscription received. Connection={connection.connectionId}, Type={message.TypeId}");
+            //Debug.Log($"NetworkMessageService: Subscription received. Connection={connection.connectionId}, Type={message.TypeId}");
 
             if (_subscriptions.HasSubscription(connection, message.TypeId))
                 return;
