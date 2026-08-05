@@ -1,18 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using Mirror;
 
-public class SubscriptionMessage : MonoBehaviour
+namespace Networking.Messages
 {
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+    /// Tell to server whay type of messages client wants to recieve.
+    /// </summary>
+    public struct SubscriptionMessage : NetworkMessage
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        public ushort TypeId;
     }
 }
