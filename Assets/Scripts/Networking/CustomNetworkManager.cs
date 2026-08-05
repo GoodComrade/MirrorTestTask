@@ -2,6 +2,7 @@ using Mirror;
 using Networking;
 using Networking.Services;
 using Zenject;
+using UnityEngine;
 
 public class CustomNetworkManager : NetworkManager
 {

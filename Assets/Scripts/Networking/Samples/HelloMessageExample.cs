@@ -1,6 +1,4 @@
-using Mirror;
-using Networking.Messages;
-using Networking.Services;
+using System.Collections;
 using Mirror;
 using Networking.Messages;
 using Networking.Services;
@@ -17,23 +15,30 @@ namespace Networking.Samples
         [Inject]
         private void Construct(INetworkMessageService networkService)
         {
+            Debug.Log("HelloMessageSample: Injected");
             _networkService = networkService;
         }
 
 
         private void Start()
         {
-            _networkService.RegisterHandler<HelloMessage>(OnHelloMessage);
+            Debug.Log("HelloMessageSample: Start");
+
+            _networkService.RegisterHandler<HelloMessage>(
+                OnHelloMessage);
+
+
+            Debug.Log("HelloMessageSample: Subscribe to ClientSubscribed event");
 
             _networkService.ClientSubscribed += OnClientSubscribed;
 
-            NetworkClient.OnConnectedEvent += OnConnected;
-        }
 
+            StartCoroutine(CheckClientConnection());
+        }
 
         private void OnDestroy()
         {
-            NetworkClient.OnConnectedEvent -= OnConnected;
+            NetworkClient.OnConnectedEvent -= Subscribe;
 
             if (_networkService != null)
             {
@@ -41,14 +46,24 @@ namespace Networking.Samples
             }
         }
 
-
-        private void OnConnected()
+        private IEnumerator CheckClientConnection()
         {
-            Debug.Log("Client connected. Sending subscription.");
+            while (!NetworkClient.isConnected)
+            {
+                yield return null;
+            }
+
+            Debug.Log("HelloMessageSample: Client connected");
+
+            Subscribe();
+        }
+
+        private void Subscribe()
+        {
+            Debug.Log("HelloMessageSample: Subscribe called");
 
             _networkService.Subscribe<HelloMessage>();
         }
-
 
         private void OnHelloMessage(HelloMessage message)
         {
@@ -60,7 +75,8 @@ namespace Networking.Samples
             NetworkConnectionToClient connection,
             ushort typeId)
         {
-            Debug.Log($"Subscription received: {typeId}");
+            Debug.Log(
+        $"HelloMessageSample: ClientSubscribed. Connection={connection.connectionId}, Type={typeId}");
 
             _networkService.Send(
                 connection,

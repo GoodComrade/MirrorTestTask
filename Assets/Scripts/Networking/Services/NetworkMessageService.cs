@@ -39,11 +39,13 @@ namespace Networking.Services
 
         public void RegisterServerHandlers()
         {
+            Debug.Log("SERVER: RegisterServerHandlers");
             _serverMessenger.RegisterSubscriptionHandler(OnSubscriptionReceived);
         }
 
         public void RegisterClientHandlers()
         {
+            Debug.Log("CLIENT: Register handlers");
             _clientMessenger.RegisterEnvelopeHandler(OnEnvelopeReceived);
         }
 
@@ -68,11 +70,15 @@ namespace Networking.Services
 
             ushort typeId = _registry.GetId<T>();
 
+            Debug.Log(
+        $"CLIENT: Sending subscription {typeof(T).Name}, id={typeId}");
+        
             _clientMessenger.Send(new SubscriptionMessage
-            {
-                TypeId = typeId
-            });
+                {
+                    TypeId = typeId
+                });
         }
+
 
         public void Send<T>(NetworkConnectionToClient connection, T message)
         {
@@ -84,8 +90,14 @@ namespace Networking.Services
 
             ushort typeId = _registry.GetId<T>();
 
+            Debug.Log(
+    $"Checking subscription. Connection={connection.connectionId}, Type={typeId}");
             if (!_subscriptions.HasSubscription(connection, typeId))
+            {
+                Debug.Log(
+        $"Connection {connection.connectionId} is not subscribed.");
                 return;
+            }
 
             byte[] payload = _serializer.Serialize(message);
 
@@ -94,6 +106,9 @@ namespace Networking.Services
                 TypeId = typeId,
                 Payload = payload
             });
+
+            Debug.Log(
+        $"NetworkMessageService.Send called. Message={typeof(T).Name}");
         }
 
         public void Broadcast<T>(T message)
@@ -124,6 +139,9 @@ namespace Networking.Services
             NetworkConnectionToClient connection,
             SubscriptionMessage message)
         {
+            Debug.Log(
+        $"NetworkMessageService: Subscription received. Connection={connection.connectionId}, Type={message.TypeId}");
+
             if (_subscriptions.HasSubscription(connection, message.TypeId))
                 return;
 
